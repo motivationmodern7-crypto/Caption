@@ -1,7 +1,8 @@
 import os
 from groq import Groq
 
-client = Groq(api_key=os.environ.get("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"))
+# Railway mein jo variable ka naam rakha hai (GROK_API_KEY), wo yahan likho
+client = Groq(api_key=os.environ.get("GROK_API_KEY"))
 
 def convert_to_roman(text):
     try:
@@ -10,5 +11,6 @@ def convert_to_roman(text):
             messages=[{"role": "user", "content": f"Convert to Roman Urdu: {text}"}]
         )
         return response.choices[0].message.content.strip()
-    except:
+    except Exception as e:
+        print("Groq Error:", e) # Error check karne ke liye print zaroori hai
         return text
