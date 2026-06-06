@@ -1,17 +1,15 @@
-# Python ka official image use karte hain
+# Python ka official image
 FROM python:3.10-slim
 
 # Working directory set karo
 WORKDIR /code
 
-# Pehle requirements copy karo (taaki caching fast ho)
+# Requirements copy aur install karo
 COPY ./requirements.txt /code/requirements.txt
-
-# Dependencies install karo
 RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
-# Baaki sara code copy karo
+# Baaki code copy karo
 COPY . .
 
-# Server start karne ka command
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7860"]
+# IMPORTANT: Railway ke liye $PORT ka use karo
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-7860}"]
