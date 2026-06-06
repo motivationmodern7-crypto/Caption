@@ -2,7 +2,7 @@ from faster_whisper import WhisperModel
 from roman_converter import convert_to_roman
 
 model = WhisperModel(
-    "large-v3",
+    "tiny",
     device="cpu",
     compute_type="int8"
 )
