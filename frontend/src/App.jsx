@@ -130,7 +130,7 @@ function App() {
     formData.append("file", file);
 
     try {
-      const response = await axios.post("http://127.0.0.1:8000/transcribe", formData);
+      const response = await axios.post("https://caption-production.up.railway.app/", formData);
       setCaptions(response.data.captions || []);
     } catch (error) {
       console.error("Error during caption generation:", error);
