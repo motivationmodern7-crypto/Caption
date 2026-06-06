@@ -1,56 +1,17 @@
-from faster_whisper import WhisperModel
-from roman_converter import convert_to_roman
+import os
+from groq import Groq
 
-model = WhisperModel(
-    "tiny",
-    device="cpu",
-    compute_type="int8"
-)
+client = Groq(api_key=os.environ.get("GROK_API_KEY"))
 
 def transcribe_video(video_path):
-
-    segments, info = model.transcribe(
-        video_path,
-        beam_size=10,
-        word_timestamps=True,
-        task="transcribe",
-        language="ur"
-    )
-
-    print("Detected Language:", info.language)
-
-    results = []
-
-    for segment in segments:
-
-        original_text = segment.text.strip()
-
-        roman_text = convert_to_roman(original_text)
-
-        roman_words = roman_text.split()
-
-        words = []
-
-        if segment.words:
-
-            for i, word in enumerate(segment.words):
-
-                if i < len(roman_words):
-                    display_word = roman_words[i]
-                else:
-                    continue
-
-                words.append({
-                    "word": display_word,
-                    "start": round(word.start, 2),
-                    "end": round(word.end, 2)
-                })
-
-        results.append({
-            "text": roman_text,
-            "start": round(segment.start, 2),
-            "end": round(segment.end, 2),
-            "words": words
-        })
-
-    return results
+    # Video file ko transcribe karne ke liye Groq API ka use
+    with open(video_path, "rb") as file:
+        transcription = client.audio.transcriptions.create(
+            file=(video_path, file.read()),
+            model="whisper-large-v3",
+            response_format="verbose_json",
+        )
+    
+    # Simple output format for your frontend
+    return [{"text": segment["text"], "start": segment["start"], "end": segment["end"]} 
+            for segment in transcription.segments]
