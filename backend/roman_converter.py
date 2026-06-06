@@ -2,7 +2,8 @@ import os
 from groq import Groq
 
 # Railway mein jo variable ka naam rakha hai (GROK_API_KEY), wo yahan likho
-client = Groq(api_key=os.environ.get("GROK_API_KEY"))
+client = Groq(api_key=os.environ.get("GROK_API_KEY"),
+    http_client=httpx.Client(proxies=None))
 
 def convert_to_roman(text):
     try:
