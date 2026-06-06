@@ -8,70 +8,27 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 UPLOAD_DIR = "uploads"
-
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-
-@app.get("/")
-def home():
-    return {
-        "message": "Kalakar Clone Backend Running"
-    }
-
-
-@app.get("/health")
-def health():
-    return {
-        "status": "ok"
-    }
-
-
-@app.post("/upload")
-async def upload_video(file: UploadFile = File(...)):
-
-    file_path = os.path.join(
-        UPLOAD_DIR,
-        file.filename
-    )
-
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(
-            file.file,
-            buffer
-        )
-
-    return {
-        "success": True,
-        "filename": file.filename,
-        "path": file_path
-    }
-    
 @app.post("/transcribe")
 async def transcribe(file: UploadFile = File(...)):
-
-    file_path = os.path.join(
-        UPLOAD_DIR,
-        file.filename
-    )
-
+    file_path = os.path.join(UPLOAD_DIR, file.filename)
+    
     with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(
-            file.file,
-            buffer
-        )
+        shutil.copyfileobj(file.file, buffer)
 
-    captions = transcribe_video(
-        file_path
-    )
+    # Transcription call
+    captions = transcribe_video(file_path)
+    
+    # MEMORY FIX: File delete karo takki server crash na ho
+    if os.path.exists(file_path):
+        os.remove(file_path)
 
-    return {
-        "success": True,
-        "captions": captions
-    }
+    return {"success": True, "captions": captions}
