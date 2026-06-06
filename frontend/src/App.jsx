@@ -130,19 +130,13 @@ function App() {
     formData.append("file", file);
 
     try {
-      const response = await axios.post("https://caption-production.up.railway.app/", formData);
-      setCaptions(response.data.captions || []);
-    } catch (error) {
-      console.error("Error during caption generation:", error);
-      alert("Upload failed! Fallback active word tracking loaded.");
-      setCaptions([
-        { start: 0, end: 1.5, text: "kayaamat", words: [{word: "kayaamat", start: 0, end: 1.5, highlight: false}] },
-        { start: 1.5, end: 3.0, text: "mein kya", words: [{word: "mein", start: 1.5, end: 2.2, highlight: false}, {word: "kya", start: 2.2, end: 3.0, highlight: false}] },
-        { start: 3.0, end: 5.5, text: "munh dikhaoge", words: [{word: "munh", start: 3.0, end: 4.2, highlight: true}, {word: "dikhaoge", start: 4.2, end: 5.5, highlight: false}] },
-        { start: 5.5, end: 7.5, text: "rab ko", words: [{word: "rab", start: 5.5, end: 6.5, highlight: false}, {word: "ko", start: 6.5, end: 7.5, highlight: false}] },
-        { start: 7.5, end: 9.5, text: "e duniya", words: [{word: "e", start: 7.5, end: 8.2, highlight: false}, {word: "duniya", start: 8.2, end: 9.5, highlight: true}] }
-      ]);
-    }
+  // Endpoint `/transcribe` add kiya
+  const response = await axios.post("https://caption-production.up.railway.app/transcribe", formData);
+  setCaptions(response.data.captions || []);
+} catch (error) {
+  console.error("Error during caption generation:", error);
+  alert("Upload failed! Check console for details.");
+}
     setLoading(false);
   };
 
