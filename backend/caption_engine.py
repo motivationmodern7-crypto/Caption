@@ -1,7 +1,8 @@
 import os
 from groq import Groq
 
-client = Groq(api_key=os.environ.get("GROK_API_KEY"))
+client = Groq(api_key=os.environ.get("GROK_API_KEY"),
+    http_client=httpx.Client(proxies=None))
 
 def transcribe_video(video_path):
     # Video file ko transcribe karne ke liye Groq API ka use
