@@ -13,25 +13,27 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+UPLOAD_DIR = "uploads"
+if not os.path.exists(UPLOAD_DIR):
+    os.makedirs(UPLOAD_DIR)
+
 @app.get("/")
 def read_root():
-    return {"message": "Server is running! Access /transcribe for POST."}
-UPLOAD_DIR = "uploads"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+    return {"status": "ok", "message": "Backend is running!"}
 
 @app.post("/transcribe")
-@app.post("/transcribe/")
 async def transcribe(file: UploadFile = File(...)):
     file_path = os.path.join(UPLOAD_DIR, file.filename)
     
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    # Transcription call
-    captions = transcribe_video(file_path)
-    
-    # MEMORY FIX: File delete karo takki server crash na ho
-    if os.path.exists(file_path):
-        os.remove(file_path)
-
-    return {"success": True, "captions": captions}
+    try:
+        captions = transcribe_video(file_path)
+        return {"success": True, "captions": captions}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+    finally:
+        if os.path.exists(file_path):
+            os.remove(file_path)
