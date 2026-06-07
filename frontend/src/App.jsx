@@ -120,47 +120,41 @@ function App() {
   };
 
 const handleGenerate = async () => {
-  if (!file) return alert("Pehle video select karo!");
-  setLoading(true);
-  
-  const formData = new FormData();
-  formData.append("file", file);
-  
-  // Timeout ko 2 minute (120000 ms) tak badha diya
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), 1120000); 
-  
-  try {
-    const response = await fetch("https://caption-production.up.railway.app/transcribe", {
-      method: "POST",
-      body: formData,
-      signal: controller.signal 
-    });
+    if (!file) return alert("Pehle video select karo!");
+    setLoading(true);
+    
+    const formData = new FormData();
+    formData.append("file", file);
+    
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), 120000); 
+    
+    try {
+      const response = await fetch("https://caption-production.up.railway.app/transcribe", {
+        method: "POST",
+        body: formData,
+        signal: controller.signal 
+      });
 
-    clearTimeout(id); // Agar response mil gaya, toh timer band karo
-    
-    if (!response.ok) throw new Error("Server error");
-    
-    const data = await response.json();
-  const data = await response.json();
-if(data.success) {
-    // Backend se aaya data.captions structure: [{words: [...]}]
-    // React ko sirf words array chahiye
-    setCaptions(data.captions); 
-} else {
+      clearTimeout(id);
+      
+      if (!response.ok) throw new Error("Server error");
+      
+      // Yahan par duplicate line hata kar sirf ek baar declare karo:
+      const data = await response.json(); 
+      
+      if(data.success) {
+        setCaptions(data.captions);
+      } else {
         alert("Error: " + data.error);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Error hua hai! Console check karo.");
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    if (error.name === 'AbortError') {
-       alert("Timeout! Video process hone mein zyada time le rahi hai.");
-    } else {
-       alert("Server error! Check console.");
-    }
-    console.error("Error:", error);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   // FINDING THE DYNAMIC ACTIVE WORD TO RENDER PREMIUM ANIMATION
   let currentActiveWordObj = null;
