@@ -6,68 +6,41 @@ from fastapi.middleware.cors import CORSMiddleware
 from groq import Groq
 
 app = FastAPI()
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
-
-def compress_video(input_path, output_path):
-    # -c:v mpeg4 zyada compatible hai aur har ffmpeg mein hota hai
-    cmd = [
-        "ffmpeg", "-i", input_path, 
-        "-vf", "scale=480:-1", 
-        "-c:v", "mpeg4", "-q:v", "3", 
-        "-c:a", "libmp3lame", "-q:a", "4", 
-        "-y", output_path
-    ]
-    subprocess.run(cmd, check=True)
 
 @app.post("/transcribe")
 async def transcribe(file: UploadFile = File(...)):
-    raw_path = "raw_video.mp4"
-    compressed_path = "compressed.mp4"
-    audio_path = "temp_audio.mp3"
+    raw_path = "raw.mp4"
+    audio_path = "audio.mp3"
     
-    try:
-        with open(raw_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-        
-        # 1. Video Compress karo
-        compress_video(raw_path, compressed_path)
-        
-        # 2. Audio extract karo
-        cmd_audio = ["ffmpeg", "-i", compressed_path, "-vn", "-acodec", "libmp3lame", "-q:a", "2", "-y", audio_path]
-        subprocess.run(cmd_audio, check=True)
-        
-        # 3. Transcribe
-        with open(audio_path, "rb") as audio_file:
-            transcript = client.audio.transcriptions.create(
-                file=(audio_path, audio_file.read()),
-                model="whisper-large-v3",
-                language="ur",
-                response_format="verbose_json"
-            )
+    with open(raw_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    # Simple extraction using ffmpeg
+    subprocess.run(["ffmpeg", "-i", raw_path, "-vn", "-acodec", "libmp3lame", "-y", audio_path], check=True)
+    
+    with open(audio_path, "rb") as audio_file:
+        transcript = client.audio.transcriptions.create(
+            file=(audio_path, audio_file.read()),
+            model="whisper-large-v3",
+            response_format="verbose_json"
+        )
+    
+    # YAHAN SE FIX HAI: Hum segments se words nikal rahe hain
+    words_data = []
+    for segment in transcript.segments:
+        # Segment ke andar 'words' list hoti hai
+        for w in segment.get('words', []):
+            words_data.append({
+                "word": w.get('word', '').strip(),
+                "start": w.get('start'),
+                "end": w.get('end')
+            })
             
-        # Extraction
-        words_data = []
-        for segment in transcript.segments:
-            for word_info in segment.get('words', []):
-                words_data.append({
-                    "word": word_info.get('word', '').strip(),
-                    "start": word_info.get('start'),
-                    "end": word_info.get('end')
-                })
-        
-        # Cleanup
-        for path in [raw_path, compressed_path, audio_path]:
-            if os.path.exists(path): os.remove(path)
-        
-        return {"success": True, "captions": [{"words": words_data}]}
-        
-    except Exception as e:
-        return {"success": False, "error": str(e)}
+    # Cleanup
+    if os.path.exists(raw_path): os.remove(raw_path)
+    if os.path.exists(audio_path): os.remove(audio_path)
+    
+    # Frontend ko object ka array bhej rahe hain
+    return {"success": True, "captions": [{"words": words_data}]}
