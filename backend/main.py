@@ -7,7 +7,7 @@ from groq import Groq
 
 app = FastAPI()
 
-# CORS settings
+# CORS for Frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -15,7 +15,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize Groq client
+# Groq Client
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
 @app.post("/transcribe")
@@ -24,30 +24,29 @@ async def transcribe(file: UploadFile = File(...)):
     audio_path = "temp_audio.mp3"
     
     try:
-        # Save uploaded video
+        # Save file
         with open(video_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
         
-        # Convert to audio
+        # Audio extraction
         clip = mp.VideoFileClip(video_path)
         clip.audio.write_audiofile(audio_path, bitrate="16k", logger=None)
         clip.close()
         
-        # Transcribe with Groq
+        # Transcribe
         with open(audio_path, "rb") as audio_file:
             transcript = client.audio.transcriptions.create(
                 file=(audio_path, audio_file.read()),
-                model="distil-whisper-large-v3",
+                model="whisper-large-v3", # Final model set
                 response_format="verbose_json"
             )
             
-        # Extract words safely (handling both 'words' and 'segments' structures)
+        # Extraction logic
         words_list = []
         if hasattr(transcript, 'words') and transcript.words:
             words_list = [{"word": w.word.strip(), "start": w.start, "end": w.end} for w in transcript.words]
         elif hasattr(transcript, 'segments') and transcript.segments:
             for segment in transcript.segments:
-                # Handle cases where segments might be objects or dicts
                 seg_words = segment.get('words', []) if isinstance(segment, dict) else getattr(segment, 'words', [])
                 for word_info in seg_words:
                     words_list.append({
@@ -56,11 +55,8 @@ async def transcribe(file: UploadFile = File(...)):
                         "end": word_info.get('end') if isinstance(word_info, dict) else word_info.end
                     })
 
-        # Format output for frontend
-        formatted_captions = [{
-            "text": transcript.text,
-            "words": words_list
-        }]
+        # Return format
+        formatted_captions = [{"text": transcript.text, "words": words_list}]
             
         # Cleanup
         if os.path.exists(video_path): os.remove(video_path)
@@ -69,7 +65,6 @@ async def transcribe(file: UploadFile = File(...)):
         return {"success": True, "captions": formatted_captions}
         
     except Exception as e:
-        # Cleanup on failure
         if os.path.exists(video_path): os.remove(video_path)
         if os.path.exists(audio_path): os.remove(audio_path)
         return {"success": False, "error": str(e)}
