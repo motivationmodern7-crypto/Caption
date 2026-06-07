@@ -513,7 +513,7 @@ body {
 }
 
 .selected-premium-border {
-  border-color: #10b981 !omportant;
+  border-color: #10b981 !important;
   box-shadow: 0 0 8px rgba(16, 185, 129, 0.2);
 }
 
