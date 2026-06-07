@@ -125,6 +125,9 @@ const handleGenerate = async () => {
   
   const formData = new FormData();
   formData.append("file", file);
+
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), 120000);
   
   try {
     const response = await fetch("https://caption-production.up.railway.app/transcribe", {
