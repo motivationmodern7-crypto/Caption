@@ -23,7 +23,7 @@ async def transcribe(file: UploadFile = File(...)):
     with open(audio_path, "rb") as audio_file:
         transcript = client.audio.transcriptions.create(
             file=(audio_path, audio_file.read()),
-            model="whisper-large-v3",
+            model="distil-whisper-large-v3",
             response_format="verbose_json"
         )
     
