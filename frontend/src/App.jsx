@@ -125,16 +125,20 @@ const handleGenerate = async () => {
   
   const formData = new FormData();
   formData.append("file", file);
-
+  
+  // Timeout ko 2 minute (120000 ms) tak badha diya
   const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), 120000);
+  const id = setTimeout(() => controller.abort(), 120000); 
   
   try {
     const response = await fetch("https://caption-production.up.railway.app/transcribe", {
       method: "POST",
       body: formData,
+      signal: controller.signal 
     });
 
+    clearTimeout(id); // Agar response mil gaya, toh timer band karo
+    
     if (!response.ok) throw new Error("Server error");
     
     const data = await response.json();
@@ -144,8 +148,12 @@ const handleGenerate = async () => {
         alert("Error: " + data.error);
     }
   } catch (error) {
+    if (error.name === 'AbortError') {
+       alert("Timeout! Video process hone mein zyada time le rahi hai.");
+    } else {
+       alert("Server error! Check console.");
+    }
     console.error("Error:", error);
-    alert("Timeout ya Server error! Check console.");
   } finally {
     setLoading(false);
   }
