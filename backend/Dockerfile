@@ -13,3 +13,5 @@ COPY . .
 
 # IMPORTANT: Railway ke liye $PORT ka use karo
 CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-7860}"]
+
+RUN apt-get update && apt-get install -y ffmpeg
