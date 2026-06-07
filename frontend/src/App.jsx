@@ -125,7 +125,9 @@ const handleGenerate = async () => {
   setLoading(true);
   const formData = new FormData();
   formData.append("file", file);
-
+  
+  const API_URL = import.meta.env.VITE_API_URL;
+  
   try {
     // Ye line aapka request POST method se bhejegi
     const response = await fetch("https://caption-production.up.railway.app/transcribe", {
