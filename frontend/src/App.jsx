@@ -142,9 +142,12 @@ const handleGenerate = async () => {
     if (!response.ok) throw new Error("Server error");
     
     const data = await response.json();
-    if(data.success) {
-        setCaptions(data.captions);
-    } else {
+   if(data.success) {
+      // Backend ab {"captions": [{"words": [...]}]} bhej raha hai
+      // Agar backend sirf ek object bhej raha hai, toh use array mein rakho
+      const processedCaptions = Array.isArray(data.captions) ? data.captions : [data.captions];
+      setCaptions(processedCaptions); 
+  } else {
         alert("Error: " + data.error);
     }
   } catch (error) {
