@@ -47,6 +47,8 @@ async def transcribe(file: UploadFile = File(...)):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-@app.get("/")
+@app.get("/test")
+async def test_backend():
+    return {"status": "Backend is working perfectly!"}
 def read_root():
     return {"status": "Backend is running smooth!"}
