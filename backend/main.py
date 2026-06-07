@@ -7,7 +7,6 @@ import openai
 
 app = FastAPI()
 
-# 1. CORS Middleware (Frontend-Backend connection ke liye)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -15,7 +14,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# OpenAI API Key (Apna key yahan daal do ya Environment Variable use karo)
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 @app.post("/transcribe")
@@ -24,21 +22,20 @@ async def transcribe(file: UploadFile = File(...)):
     audio_path = "temp_audio.mp3"
     
     try:
-        # 1. File save karo
+        # File save karo
         with open(video_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
         
-        # 2. Audio nikalo (MoviePy) - Ye 33MB ki video ko chota MP3 bana dega
+        # Audio nikalo aur compress karo (bitrate="32k" se file size 1MB ho jayega)
         clip = mp.VideoFileClip(video_path)
-        clip.audio.write_audiofile(audio_path)
+        clip.audio.write_audiofile(audio_path, bitrate="32k", logger=None)
         clip.close()
         
-        # 3. OpenAI Whisper ko chhota Audio bhejo
-        audio_file = open(audio_path, "rb")
-        transcript = openai.Audio.transcribe("whisper-1", audio_file)
-        audio_file.close()
+        # OpenAI ko bhejo
+        with open(audio_path, "rb") as audio_file:
+            transcript = openai.Audio.transcribe("whisper-1", audio_file)
         
-        # Files delete karo
+        # Clean up
         if os.path.exists(video_path): os.remove(video_path)
         if os.path.exists(audio_path): os.remove(audio_path)
         
@@ -46,7 +43,3 @@ async def transcribe(file: UploadFile = File(...)):
         
     except Exception as e:
         return {"success": False, "error": str(e)}
-
-@app.get("/")
-def read_root():
-    return {"status": "Backend running"}
