@@ -22,6 +22,10 @@ if not os.path.exists(UPLOAD_DIR):
 def read_root():
     return {"status": "ok", "message": "Backend is running!"}
 
+@app.get("/transcribe")
+async def get_transcribe_help():
+    return {"message": "Use POST method to send a video file for transcription."}
+
 @app.post("/transcribe")
 async def transcribe(file: UploadFile = File(...)):
     file_path = os.path.join(UPLOAD_DIR, file.filename)
