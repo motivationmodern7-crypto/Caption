@@ -17,12 +17,12 @@ app.add_middleware(
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
 def compress_video(input_path, output_path):
-    # FFmpeg command: resolution ko 480p kar raha hai aur size compress kar raha hai
+    # -c:v mpeg4 zyada compatible hai aur har ffmpeg mein hota hai
     cmd = [
         "ffmpeg", "-i", input_path, 
         "-vf", "scale=480:-1", 
-        "-c:v", "libx264", "-crf", "30", 
-        "-c:a", "aac", "-b:a", "64k", 
+        "-c:v", "mpeg4", "-q:v", "3", 
+        "-c:a", "libmp3lame", "-q:a", "4", 
         "-y", output_path
     ]
     subprocess.run(cmd, check=True)
