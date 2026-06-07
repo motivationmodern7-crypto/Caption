@@ -20,6 +20,8 @@ UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 @app.post("/transcribe")
+@app.post("/transcribe/")
+async def transcribe(file: UploadFile = File(...)):
 async def transcribe(file: UploadFile = File(...)):
     file_path = os.path.join(UPLOAD_DIR, file.filename)
     
