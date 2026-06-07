@@ -119,26 +119,34 @@ function App() {
     setVideoUrl(URL.createObjectURL(selectedFile));
   };
 
-  const handleGenerate = async () => {
-    if (!file) {
-      alert("Select a video first");
-      return;
-    }
-    
-    setLoading(true);
-    const formData = new FormData();
-    formData.append("file", file);
+const handleGenerate = async () => {
+  if (!file) {
+    alert("Select a video first");
+    return;
+  }
+  
+  setLoading(true);
+  const formData = new FormData();
+  formData.append("file", file);
 
-    try {
-  // Endpoint `/transcribe` add kiya
-  const response = await axios.post("https://caption-production.up.railway.app/transcribe", formData);
-  setCaptions(response.data.captions || []);
-} catch (error) {
-  console.error("Error during caption generation:", error);
-  alert("Upload failed! Check console for details.");
-}
-    setLoading(false);
-  };
+  try {
+    // Axios request with explicit header
+    const response = await axios.post(
+      "https://caption-production.up.railway.app/transcribe", 
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
+      }
+    );
+    setCaptions(response.data.captions || []);
+  } catch (error) {
+    console.error("Error:", error);
+    alert("Upload failed! Check browser console.");
+  }
+  setLoading(false);
+};
 
   // FINDING THE DYNAMIC ACTIVE WORD TO RENDER PREMIUM ANIMATION
   let currentActiveWordObj = null;
