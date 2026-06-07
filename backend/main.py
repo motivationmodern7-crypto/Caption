@@ -7,7 +7,6 @@ from groq import Groq
 
 app = FastAPI()
 
-# CORS for Frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -15,7 +14,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Groq Client
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
 @app.post("/transcribe")
@@ -24,55 +22,37 @@ async def transcribe(file: UploadFile = File(...)):
     audio_path = "temp_audio.mp3"
     
     try:
-        # Save file
         with open(video_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
         
-        # Audio extraction
         clip = mp.VideoFileClip(video_path)
         clip.audio.write_audiofile(audio_path, bitrate="16k", logger=None)
         clip.close()
         
-        # Transcribe
         with open(audio_path, "rb") as audio_file:
+            # 'verbose_json' use kar rahe hain taaki words aur timestamps milein
             transcript = client.audio.transcriptions.create(
                 file=(audio_path, audio_file.read()),
-                model="whisper-large-v3", # Final model set
+                model="whisper-large-v3",
                 response_format="verbose_json"
             )
             
-        # Extraction logic
-        words_list = []
-        if hasattr(transcript, 'words') and transcript.words:
-            words_list = [{"word": w.word.strip(), "start": w.start, "end": w.end} for w in transcript.words]
-        elif hasattr(transcript, 'segments') and transcript.segments:
-            for segment in transcript.segments:
-                seg_words = segment.get('words', []) if isinstance(segment, dict) else getattr(segment, 'words', [])
-                for word_info in seg_words:
-                    words_list.append({
-                        "word": word_info.get('word', '').strip() if isinstance(word_info, dict) else word_info.word.strip(),
-                        "start": word_info.get('start') if isinstance(word_info, dict) else word_info.start,
-                        "end": word_info.get('end') if isinstance(word_info, dict) else word_info.end
-                    })
-
-        # Return format
-        formatted_captions = [{"text": transcript.text, "words": words_list}]
-            
+        # Structure create karna jo tumhare React 'captions.map' ke liye sahi hai
+        words_data = []
+        for segment in transcript.segments:
+            for word_info in segment.get('words', []):
+                words_data.append({
+                    "word": word_info.get('word', '').strip(),
+                    "start": word_info.get('start'),
+                    "end": word_info.get('end')
+                })
+        
         # Cleanup
         if os.path.exists(video_path): os.remove(video_path)
         if os.path.exists(audio_path): os.remove(audio_path)
         
-        return {"success": True, "captions": formatted_captions}
+        # Array return kar rahe hain jisme words ka list hai
+        return {"success": True, "captions": [{"words": words_data}]}
         
     except Exception as e:
-        if os.path.exists(video_path): os.remove(video_path)
-        if os.path.exists(audio_path): os.remove(audio_path)
         return {"success": False, "error": str(e)}
-
-@app.get("/")
-def read_root():
-    return {"status": "Backend is running smooth!"}
-
-@app.get("/test")
-async def test_backend():
-    return {"status": "Backend is working perfectly!"}
