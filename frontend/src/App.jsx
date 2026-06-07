@@ -127,7 +127,7 @@ const handleGenerate = async () => {
   formData.append("file", file);
 
   try {
-    const response = await fetch("https://caption-production.up.railway.app/transcribe", {
+    const response = await fetch("https://caption-production.up.railway.app/", {
       method: "POST", // Yahan hum 'fetch' use kar rahe hain taaki axios ka conflict khatam ho
       body: formData,
     });
