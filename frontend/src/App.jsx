@@ -120,32 +120,26 @@ function App() {
   };
 
 const handleGenerate = async () => {
-  if (!file) {
-    alert("Select a video first");
-    return;
-  }
-  
-  setLoading(true);
-  const formData = new FormData();
-  formData.append("file", file);
+    if (!file) return;
+    setLoading(true);
 
-  try {
-    // Axios request with explicit header
-    const response = await axios.post(
-      "https://caption-production.up.railway.app/transcribe", 
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data"
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await axios({
+        method: 'post', // Yahan explicit 'post' set kar diya
+        url: 'https://caption-production.up.railway.app/transcribe',
+        data: formData,
+        headers: { 
+          'Content-Type': 'multipart/form-data' 
         }
-      }
-    );
-    setCaptions(response.data.captions || []);
-  } catch (error) {
-    console.error("Error:", error);
-    alert("Upload failed! Check browser console.");
-  }
-  setLoading(false);
+      });
+      setCaptions(response.data.captions || []);
+    } catch (error) {
+      console.error("Error:", error);
+    }
+    setLoading(false);
 };
 
   // FINDING THE DYNAMIC ACTIVE WORD TO RENDER PREMIUM ANIMATION
