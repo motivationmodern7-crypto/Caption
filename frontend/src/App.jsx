@@ -120,26 +120,29 @@ function App() {
   };
 
 const handleGenerate = async () => {
-    if (!file) return;
-    setLoading(true);
+  if (!file) return alert("Select a video!");
+  setLoading(true);
 
-    const formData = new FormData();
-    formData.append("file", file);
+  const formData = new FormData();
+  formData.append("file", file);
 
-    try {
-      const response = await axios({
-        method: 'post', // Yahan explicit 'post' set kar diya
-        url: 'https://caption-production.up.railway.app/transcribe',
-        data: formData,
-        headers: { 
-          'Content-Type': 'multipart/form-data' 
-        }
-      });
-      setCaptions(response.data.captions || []);
-    } catch (error) {
-      console.error("Error:", error);
+  try {
+    const response = await fetch("https://caption-production.up.railway.app/transcribe", {
+      method: "POST", // Yahan hum 'fetch' use kar rahe hain taaki axios ka conflict khatam ho
+      body: formData,
+    });
+
+    const result = await response.json();
+    if (response.ok) {
+      setCaptions(result.captions || []);
+    } else {
+      console.error("Server Error:", result);
+      alert("Error: " + JSON.stringify(result));
     }
-    setLoading(false);
+  } catch (error) {
+    console.error("Network Error:", error);
+  }
+  setLoading(false);
 };
 
   // FINDING THE DYNAMIC ACTIVE WORD TO RENDER PREMIUM ANIMATION
