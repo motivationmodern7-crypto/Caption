@@ -120,27 +120,24 @@ function App() {
   };
 
 const handleGenerate = async () => {
-  if (!file) return alert("Select a video!");
+  if (!file) return alert("Pehle video select karo!");
+  
   setLoading(true);
-
   const formData = new FormData();
   formData.append("file", file);
 
   try {
-    const response = await fetch("https://caption-production.up.railway.app/", {
-      method: "POST", // Yahan hum 'fetch' use kar rahe hain taaki axios ka conflict khatam ho
+    // Ye line aapka request POST method se bhejegi
+    const response = await fetch("https://caption-production.up.railway.app/transcribe", {
+      method: "POST",
       body: formData,
     });
 
-    const result = await response.json();
-    if (response.ok) {
-      setCaptions(result.captions || []);
-    } else {
-      console.error("Server Error:", result);
-      alert("Error: " + JSON.stringify(result));
-    }
+    const data = await response.json();
+    setCaptions(data.captions || []);
   } catch (error) {
-    console.error("Network Error:", error);
+    console.error("Error:", error);
+    alert("Connection error! Check console.");
   }
   setLoading(false);
 };
