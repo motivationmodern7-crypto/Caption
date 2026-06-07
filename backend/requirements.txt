@@ -1,6 +1,6 @@
 fastapi
 uvicorn[standard]
 python-multipart
-moviepy
+moviepy==1.0.3
 groq
 httpx
