@@ -29,7 +29,7 @@ async def transcribe(file: UploadFile = File(...)):
             shutil.copyfileobj(file.file, buffer)
         
         clip = mp.VideoFileClip(video_path)
-        clip.audio.write_audiofile(audio_path, bitrate="32k", logger=None)
+        clip.audio.write_audiofile(audio_path, bitrate="16k", logger=None)
         clip.close()
         
         with open(audio_path, "rb") as audio_file:
