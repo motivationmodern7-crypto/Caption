@@ -128,7 +128,7 @@ const handleGenerate = async () => {
   
   // Timeout ko 2 minute (120000 ms) tak badha diya
   const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), 120000); 
+  const id = setTimeout(() => controller.abort(), 1120000); 
   
   try {
     const response = await fetch("https://caption-production.up.railway.app/transcribe", {
