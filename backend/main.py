@@ -29,11 +29,11 @@ async def transcribe(file: UploadFile = File(...)):
         clip.audio.write_audiofile(audio_path, bitrate="16k", logger=None)
         clip.close()
         
-        with open(audio_path, "rb") as audio_file:
-            # 'verbose_json' use kar rahe hain taaki words aur timestamps milein
+      with open(audio_path, "rb") as audio_file:
             transcript = client.audio.transcriptions.create(
                 file=(audio_path, audio_file.read()),
                 model="whisper-large-v3",
+                language="ur", # Yahan "ur" (Urdu/Hindi mix) set karo
                 response_format="verbose_json"
             )
             
