@@ -121,27 +121,31 @@ function App() {
 
 const handleGenerate = async () => {
   if (!file) return alert("Pehle video select karo!");
-  
   setLoading(true);
+  
   const formData = new FormData();
   formData.append("file", file);
   
-  const API_URL = import.meta.env.VITE_API_URL;
-  
   try {
-    // Ye line aapka request POST method se bhejegi
     const response = await fetch("https://caption-production.up.railway.app/transcribe", {
       method: "POST",
       body: formData,
     });
 
+    if (!response.ok) throw new Error("Server error");
+    
     const data = await response.json();
-    setCaptions(data.captions || []);
+    if(data.success) {
+        setCaptions(data.captions);
+    } else {
+        alert("Error: " + data.error);
+    }
   } catch (error) {
     console.error("Error:", error);
-    alert("Connection error! Check console.");
+    alert("Timeout ya Server error! Check console.");
+  } finally {
+    setLoading(false);
   }
-  setLoading(false);
 };
 
   // FINDING THE DYNAMIC ACTIVE WORD TO RENDER PREMIUM ANIMATION
