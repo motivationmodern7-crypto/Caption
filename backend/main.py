@@ -7,30 +7,18 @@ from groq import Groq
 
 app = FastAPI()
 
-# CORS Fix: Clearly defined origins
-origins = [
-    "https://frontend8585.up.railway.app",
-    "http://localhost:5173"
-]
-
+# CORS: Allow frontend to communicate with backend
+origins = ["*"]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
-
-def compress_and_extract(input_path, output_audio):
-    # Video compress aur audio extract ek saath
-    cmd = [
-        "ffmpeg", "-i", input_path, 
-        "-vn", "-acodec", "libmp3lame", 
-        "-q:a", "2", "-y", output_audio
-    ]
-    subprocess.run(cmd, check=True)
+# API Key check
+api_key = os.environ.get("GROQ_API_KEY")
+client = Groq(api_key=api_key)
 
 @app.post("/transcribe")
 async def transcribe(file: UploadFile = File(...)):
@@ -38,13 +26,14 @@ async def transcribe(file: UploadFile = File(...)):
     audio_path = "temp_audio.mp3"
     
     try:
+        # Save file
         with open(raw_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
         
-        # Audio extraction
-        compress_and_extract(raw_path, audio_path)
+        # Audio Extraction using ffmpeg
+        subprocess.run(["ffmpeg", "-i", raw_path, "-vn", "-acodec", "libmp3lame", "-y", audio_path], check=True)
         
-        # Transcription
+        # Transcribe
         with open(audio_path, "rb") as audio_file:
             transcript = client.audio.transcriptions.create(
                 file=(audio_path, audio_file.read()),
@@ -53,7 +42,6 @@ async def transcribe(file: UploadFile = File(...)):
                 response_format="verbose_json"
             )
             
-        # Extracting words with timestamps
         words_data = []
         for segment in transcript.segments:
             for w in segment.get('words', []):
@@ -73,5 +61,5 @@ async def transcribe(file: UploadFile = File(...)):
         return {"success": False, "error": str(e)}
 
 @app.get("/")
-def health_check():
-    return {"status": "Backend running correctly"}
+def read_root():
+    return {"status": "Active"}
